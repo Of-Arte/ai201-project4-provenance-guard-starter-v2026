@@ -5,14 +5,14 @@ Five criteria that say what "working" means for this service, written in unit 7
 
 **All five are yours.** None are given.
 
-An acceptance criterion names a number or something plainly observable. *"The
-detector is accurate"* is an opinion — and perfect AI detection isn't possible
-anyway, so it's an opinion about something nobody can deliver. *"Of 10 pieces I
-wrote myself, at most 1 is labelled high-confidence AI"* is a criterion.
+An acceptance criterion names a number or something plainly observable. _"The
+detector is accurate"_ is an opinion — and perfect AI detection isn't possible
+anyway, so it's an opinion about something nobody can deliver. _"Of 10 pieces I
+wrote myself, at most 1 is labelled high-confidence AI"_ is a criterion.
 
-Under each, write a sentence or two on **why that target**. *"I allow at most 1
+Under each, write a sentence or two on **why that target**. _"I allow at most 1
 false positive in 10 because on a writing site a wrong accusation costs more
-than a missed detection"* is a real answer.
+than a missed detection"_ is a real answer.
 
 > Missing your own targets next unit costs you nothing. Setting a target so
 > easy you can't miss it does.
@@ -23,13 +23,13 @@ than a missed detection"* is a real answer.
 
 **Cover at least three of these five areas.** They're prompts, not a form.
 
-| Area | A question it could answer |
-|---|---|
-| False positives | How often may a human's writing get called AI? |
-| Score spread | How far apart should clearly-AI and clearly-human text score? |
-| Label coverage | Is every one of your three labels actually reachable? |
-| The appeal path | Does an appeal always change status and always get recorded? |
-| Bad input | What happens when `text` is missing, empty, or enormous? |
+| Area            | A question it could answer                                    |
+| --------------- | ------------------------------------------------------------- |
+| False positives | How often may a human's writing get called AI?                |
+| Score spread    | How far apart should clearly-AI and clearly-human text score? |
+| Label coverage  | Is every one of your three labels actually reachable?         |
+| The appeal path | Does an appeal always change status and always get recorded?  |
+| Bad input       | What happens when `text` is missing, empty, or enormous?      |
 
 Two things worth knowing before you pick numbers:
 
@@ -42,15 +42,14 @@ Two things worth knowing before you pick numbers:
   a **miss**.
 
 ---
+
 ## 1.
 
 <!-- Your criterion. It must name a number. -->
 
+Across 10 self-written text samples, at most 1 is labeled AI across all 3 eval runs.
 
-
-**Why this target:**
-
-
+**Why this target:** Accusing a human user of writing AI is a more serious accusation than missing an AI generated text.
 
 ---
 
@@ -58,11 +57,9 @@ Two things worth knowing before you pick numbers:
 
 <!-- Your criterion. -->
 
+The mean combined score difference between 5 human and 5 AI text samples should be at least 0.40.
 
-
-**Why this target:**
-
-
+**Why this target:** It demonstrates that the system can effectively distinguish between human and AI generated text.
 
 ---
 
@@ -70,11 +67,9 @@ Two things worth knowing before you pick numbers:
 
 <!-- Your criterion. -->
 
+100% of malformed requests return a 400 error.
 
-
-**Why this target:**
-
-
+**Why this target:** Bad user output should be politely rejected rather than causing a server error.
 
 ---
 
@@ -82,23 +77,19 @@ Two things worth knowing before you pick numbers:
 
 <!-- Your criterion. -->
 
+At least 3 valid submission appeals are changed to under_review, and all of them are recorded in the appeals database.
 
-
-**Why this target:**
-
-
+**Why this target:** The appeals are the only way to contest an AI label, if it fails to record then the user has no way to dispute it.
 
 ---
 
 ## 5.
 
+Across 15 inputs, each of the 3 labels are produced at least 2 times.
+
 <!-- Your criterion. -->
 
-
-
-**Why this target:**
-
-
+**Why this target:** It ensures that the system does not favor one label over the others.
 
 ---
 
