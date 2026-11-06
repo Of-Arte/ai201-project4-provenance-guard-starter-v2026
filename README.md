@@ -85,8 +85,16 @@ It cannot read or understand meaning. Changes to the text layout or structure wi
      signals disagree? -->
 
 **The rule:**
+A balanced weighted average of the model predictability signal and the stylometric signal. When the two signals disagree, the combined score settles toward the middle "unsure" band (`0.35` to `0.65`). This captures uncertainty rather than forcing a high-confidence verdict.
 
 **The numbers:**
+`combined_score = (0.50 * model_score) + (0.50 * style_score)`
+Configured in `config.py`:
+
+- `WEIGHT_MODEL_SIGNAL = 0.50`
+- `WEIGHT_STYLE_SIGNAL = 0.50`
+- `HUMAN_THRESHOLD = 0.35` (scores `<= 0.35` $\rightarrow$ high-confidence human)
+- `AI_THRESHOLD = 0.65` (scores `>= 0.65` $\rightarrow$ high-confidence AI)
 
 **Where it lives:** `scoring.py::combine_signals`
 
@@ -94,6 +102,7 @@ It cannot read or understand meaning. Changes to the text layout or structure wi
      somewhere else, say where. -->
 
 **A case where my two signals split, and what my rule does with it:**
+In conventional human writing, the model signal flags the text as highly AI-like because ordinary words in simple sentences are very easy for GPT-2 to predict. However, the stylometric signal recognizes sentence length variability and human cadence, scoring much lower. The combining rule balances both to produce a score in the `0.55 - 0.60` range, placing it safely in the "unsure" band and preventing a false accusation.
 
 ---
 

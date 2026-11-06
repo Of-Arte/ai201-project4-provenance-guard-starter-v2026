@@ -31,6 +31,8 @@ from flask import Flask, jsonify, request
 import audit
 import config
 import detector
+import scoring
+import stylometry
 
 
 app = Flask(__name__)
@@ -213,27 +215,32 @@ def submit():
     if not isinstance(text, str) or not text.strip():
         return jsonify({"error": "Bad Request", "message": "Field 'text' must be a non-empty string."}), 400
 
-    # Step 3 - model signal
+    # Step 3 - compute both signals and combined score
     model_score = detector.model_signal(text)
+    style_score = stylometry.style_signal(text)
+    combined_score = scoring.combine_signals(model_score, style_score)
 
-    # Step 4 - Log the decision
+    # Step 4 - Log the decision with all three scores
     content_id = f"c_{uuid.uuid4().hex[:12]}"
     audit.log_decision(
         content_id=content_id,
         creator_id=creator_id,
         model_score=model_score,
+        style_score=style_score,
+        combined_score=combined_score,
         status="decided",
     )
 
-    # Route answers with real model_score and placeholders for confidence/label/style_score
+    # Route answers with both signals and combined score
     return jsonify({
         "content_id": content_id,
         "creator_id": creator_id,
         "guess": "pending",
-        "confidence": 0.0,
+        "confidence": combined_score,
         "label": "Analysis pending",
         "model_score": model_score,
-        "style_score": 0.0,
+        "style_score": style_score,
+        "combined_score": combined_score,
     }), 200
 
 
