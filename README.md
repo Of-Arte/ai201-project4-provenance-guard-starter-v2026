@@ -115,15 +115,12 @@ In conventional human writing, the model signal flags the text as highly AI-like
 
 | Label                 | Score range | The exact text a reader sees |
 | --------------------- | ----------- | ---------------------------- |
-| high-confidence human |             |                              |
-| unsure                |             |                              |
-| high-confidence AI    |             |                              |
+| high-confidence human | 0.00 – 0.35 | This text looks consistent with human writing. |
+| unsure                | 0.35 – 0.65 | We couldn't reach a clear conclusion on this text. It shows qualities common to both human writing and AI tools. |
+| high-confidence AI    | 0.65 – 1.00 | This text shows strong patterns characteristic of AI-generated content. If this is your own work, you can submit an appeal. |
 
 **Why I worded the "unsure" one this way:**
-
-<!-- It's the hardest of the three. It has to admit uncertainty without
-     sounding like an accusation, because the person reading it may well have
-     written every word themselves. -->
+The "unsure" label deliberately frames the result as a limitation of our automated system rather than an accusation against the author. It avoids alarming words like "flagged" or "suspicious," which alienate honest human writers whose style happens to fall near common language patterns. By stating that mixed qualities are natural and no definitive conclusion was reached, it sets clear expectations without hostility.
 
 ---
 
@@ -142,33 +139,37 @@ In conventional human writing, the model signal flags the text as highly AI-like
 ```bash
 $ curl -X POST http://127.0.0.1:5000/submit \
   -H "Content-Type: application/json" \
-  -d '{"text": "This is a real test submission.", "creator_id": "student_01"}'
+  -d '{"text": "In recent years, the integration of artificial intelligence into educational settings has gained significant momentum. Educational institutions are increasingly exploring ways to enhance learning experiences through intelligent tutoring systems.", "creator_id": "student_01"}'
 ```
 
 ```json
 {
-  "confidence": 0.0,
-  "content_id": "c_502a06119742",
+  "combined_score": 0.6861,
+  "confidence": 0.6861,
+  "content_id": "c_e43bc76383f4",
   "creator_id": "student_01",
-  "guess": "pending",
-  "label": "Analysis pending",
-  "model_score": 0.0996,
-  "style_score": 0.0
+  "guess": "ai",
+  "label": "This text shows strong patterns characteristic of AI-generated content. If this is your own work, you can submit an appeal.",
+  "model_score": 0.6908,
+  "style_score": 0.6814
 }
 ```
 
 **An appeal**
 
-<!-- Milestone 5: To be filled in when /appeal is implemented -->
-
 ```bash
 $ curl -X POST http://127.0.0.1:5000/appeal \
   -H "Content-Type: application/json" \
-  -d '{"content_id": "c_502a06119742", "reasoning": "This was written entirely by me."}'
+  -d '{"content_id": "c_e43bc76383f4", "reasoning": "This essay was researched and drafted independently for my education class."}'
 ```
 
 ```json
-
+{
+  "content_id": "c_e43bc76383f4",
+  "message": "Appeal recorded. Your submission is now under review.",
+  "ok": true,
+  "status": "under_review"
+}
 ```
 
 **What the log shows afterwards**
@@ -179,18 +180,26 @@ $ curl "http://127.0.0.1:5000/log?limit=3"
 
 ```json
 {
-  "count": 1,
+  "count": 2,
   "entries": [
     {
-      "combined_score": null,
-      "content_id": "c_502a06119742",
+      "combined_score": 0.6861,
+      "content_id": "c_e43bc76383f4",
       "creator_id": "student_01",
-      "guess": null,
-      "label": null,
-      "model_score": 0.0996,
+      "guess": "ai",
+      "label": "This text shows strong patterns characteristic of AI-generated content. If this is your own work, you can submit an appeal.",
+      "model_score": 0.6908,
       "status": "decided",
-      "style_score": null,
-      "timestamp": "2026-11-05T03:31:17+00:00"
+      "style_score": 0.6814,
+      "timestamp": "2026-11-06T18:47:40+00:00"
+    },
+    {
+      "content_id": "c_e43bc76383f4",
+      "creator_id": "student_01",
+      "event": "appeal",
+      "reasoning": "This essay was researched and drafted independently for my education class.",
+      "status": "under_review",
+      "timestamp": "2026-11-06T18:47:40+00:00"
     }
   ]
 }
