@@ -113,10 +113,10 @@ In conventional human writing, the model signal flags the text as highly AI-like
 
      Write them for someone who has never heard the word "threshold". -->
 
-| Label                 | Score range | The exact text a reader sees |
-| --------------------- | ----------- | ---------------------------- |
-| high-confidence human | 0.00 – 0.35 | This text looks consistent with human writing. |
-| unsure                | 0.35 – 0.65 | We couldn't reach a clear conclusion on this text. It shows qualities common to both human writing and AI tools. |
+| Label                 | Score range | The exact text a reader sees                                                                                                |
+| --------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------- |
+| high-confidence human | 0.00 – 0.35 | This text looks consistent with human writing.                                                                              |
+| unsure                | 0.35 – 0.65 | We couldn't reach a clear conclusion on this text. It shows qualities common to both human writing and AI tools.            |
 | high-confidence AI    | 0.65 – 1.00 | This text shows strong patterns characteristic of AI-generated content. If this is your own work, you can submit an appeal. |
 
 **Why I worded the "unsure" one this way:**
@@ -211,15 +211,15 @@ $ curl "http://127.0.0.1:5000/log?limit=3"
 
 **Moment 1**
 
-- _What I asked for:_
-- _What came back:_
-- _What I changed:_
+- _What I asked for:_ Asked for help refining a list of assumed pain points in the multi-signal detection service that could be measured as acceptance criteria.
+- _What came back:_ Together we narrowed it down to 3 target areas; False positives on personal writing, score separation between AI and human samples, and appeal log verification.
+- _What I changed:_ I chose to prioritize the cost of false positives due to the cost of falsely accusing an honest writer, which is more damaging than missing AI text.
 
 **Moment 2**
 
-- _What I asked for:_
-- _What came back:_
-- _What I changed:_
+- _What I asked for:_ I asked to trace the pipeline step by step, specifically focusing on how detector.py and stylometry.py were tested and how the signals behave.
+- _What came back:_ The AI helped implement the three stylometric features, sentence_length_spread, type_token_ratio, punctuation_density.
+- _What I changed:_ I added neutral handling for single-sentence inputs in stylometry.py to ensure that when signals split, the score pulls safely into the "unsure" band rather than issuing a false AI accusation.
 
 <!-- ═══════════════════════ UNIT 8 — THE TEST ═══════════════════════ -->
 
@@ -338,10 +338,10 @@ that produced it:
 
        [ ] criteria.md has five numbered criteria, each naming a target
        [ ] Each has a reason underneath
+       [ ] Three label variants, all reachable, written out in full
        [ ] POST /submit returns content_id, guess, confidence, label,
            model_score and style_score
        [ ] Two signals that measure DIFFERENT things, each with a named blind spot
-       [ ] Three label variants, all reachable, written out in full
        [ ] POST /appeal changes status and writes to the log
        [ ] Signals and Scoring names scoring.py::combine_signals
        [ ] Sample Run: a submission AND an appeal, as pasted text
