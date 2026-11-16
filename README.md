@@ -221,6 +221,18 @@ $ curl "http://127.0.0.1:5000/log?limit=3"
 - _What came back:_ The AI helped implement the three stylometric features, sentence_length_spread, type_token_ratio, punctuation_density.
 - _What I changed:_ I added neutral handling for single-sentence inputs in stylometry.py to ensure that when signals split, the score pulls safely into the "unsure" band rather than issuing a false AI accusation.
 
+**Moment 3 (unit 8)**
+
+- _What I asked for:_ Diagnoses for every missed criterion and broken attack, after running the attack set and my five criteria.
+- _What came back:_ Five patterns, each checked by running the samples back through both signals and printing every sub-measure. It also suggested  revising criterion 4.
+- _What I changed:_ I kept criterion 4 as written. The appeals are recorded in the audit log, and my criterion was measurable against it.
+
+**Moment 4 (unit 8)**
+
+- _What I asked for:_ A choice of one improvement for Milestone 5, with the expected effect of each option.
+- _What came back:_ A recommendation to add input validation at the route, which would have fixed criterion 3 with no trade-off.
+- _What I changed:_ I chose to move signal one's midpoint instead. The worst outcome was a false positive (FP03), and false positives are the error I said costs the most.
+
 <!-- ═══════════════════════ UNIT 8 — THE TEST ═══════════════════════ -->
 
 ---
@@ -598,10 +610,24 @@ Fewer real writers get accused, and more AI text gets through as "human."
 <!-- For each attack still getting through and each criterion still missed:
      what you'd do, and why you stopped. -->
 
+**Evasions and prompt injections (EV01–EV09, PI01–PI03).** AI text still gets through, and after the improvement it mostly gets a "human" label. Each attack fools one signal, typos fooling signal one and reshaping fooling signal two, and the 50/50 average lets that one signal carry the score down. I'd change the combining rule so "human" requires *both* signals to read as human, and anything they disagree on lands in "unsure." I stopped because that's a second change, and I wouldn't be able to tell its effect apart from the midpoint change.
+
+**The one-character crash (MF02, criterion 3).** In `app.py::submit`, I'd catch the `ValueError` from `detector.py::perplexity`, return a 400, and log it with `audit.log_rejection`. This is the easiest fix left. I stopped because I only had one change, and a wrong accusation costs a writer more than a 500 on a one-letter submission does.
+
+**Junk input getting labels (MF03–MF06).** Also at the route: reject text with no real words before the signals see it. Same reason for stopping as MF02.
+
+**creator_id as an object (RQ06).** Check that `creator_id` is a string, and return a 400 if it isn't. It's a small fix, and the same "one change" reason kept it out.
+
+**Criterion 2 (gap 0.201, target 0.40).** Signal two only separates my samples by about 0.16, and type-token ratio rewards short text. I'd measure vocabulary over a fixed window of words so length stops mattering. I stopped because this needs a better signal, not a tweak. Even with signal one fixed, a 50/50 average can't reach a 0.40 gap while signal two separates this little.
+
+**Criterion 5 (no AI label after the change).** Lowering the AI threshold wouldn't fix this. My AI samples now score 0.47–0.56, and the false positives score 0.55–0.61, so any threshold that catches the AI samples catches the human writing first. With the signals as they are, I can't have all three labels without bringing the false positives back. I stopped there because it's a signal problem, not a threshold problem.
+
 **The trade I'd make if this ran for real:**
 
 <!-- Two sentences. Fewer wrong accusations means more AI text getting through.
      Say which way you'd go and WHO PAYS FOR IT. -->
+
+I'd keep the lower midpoint and accept that more AI text gets through, because a false "AI" label lands on one writer who did nothing wrong, often a careful second-language writer like FP03. The cost moves to readers and to the site, which will trust some AI text it shouldn't, and to honest writers whose work sits next to AI text that passed as human.
 
 <!-- ═════════════════════════════════════════════════════════════════════
 
