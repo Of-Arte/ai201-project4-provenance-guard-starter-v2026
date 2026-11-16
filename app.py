@@ -215,29 +215,32 @@ def submit():
     if not isinstance(text, str) or not text.strip():
         return jsonify({"error": "Bad Request", "message": "Field 'text' must be a non-empty string."}), 400
 
-    # Step 3 - compute both signals and combined score
+    # Step 3 - compute both signals, combined score, and human-readable label
     model_score = detector.model_signal(text)
     style_score = stylometry.style_signal(text)
     combined_score = scoring.combine_signals(model_score, style_score)
+    guess, label_text = scoring.score_to_label(combined_score)
 
-    # Step 4 - Log the decision with all three scores
+    # Step 4 - Log the decision with all required fields
     content_id = f"c_{uuid.uuid4().hex[:12]}"
     audit.log_decision(
         content_id=content_id,
         creator_id=creator_id,
+        guess=guess,
         model_score=model_score,
         style_score=style_score,
         combined_score=combined_score,
+        label=label_text,
         status="decided",
     )
 
-    # Route answers with both signals and combined score
+    # Route answers with both signals, combined score, and label
     return jsonify({
         "content_id": content_id,
         "creator_id": creator_id,
-        "guess": "pending",
+        "guess": guess,
         "confidence": combined_score,
-        "label": "Analysis pending",
+        "label": label_text,
         "model_score": model_score,
         "style_score": style_score,
         "combined_score": combined_score,
@@ -247,31 +250,45 @@ def submit():
 @app.post("/appeal")
 def appeal():
     """
-    A writer says you got it wrong. ← TODO — Milestone 5
+    A writer says you got it wrong.
 
     Expects JSON:
         {"content_id": "...", "reasoning": "..."}
 
-    Should:
-      1. Check the content_id actually exists — `audit.entries_for(id)` tells
-         you. A typo here fails silently and looks like a broken endpoint,
-         which is the single most common way this milestone eats an hour.
-      2. Record the appeal with `audit.log_appeal(...)`, which moves the item
-         to `under_review`.
-      3. Confirm to the writer. No automatic re-checking needed.
-
-    This is the smallest endpoint in the project and the one that matters most
-    to the person on the other end. It's the only thing standing between a
-    wrong accusation and nothing at all.
+    1. Checks the content_id actually exists via audit.entries_for(id).
+    2. Records the appeal with audit.log_appeal(...), moving status to under_review.
+    3. Confirms to the writer.
     """
-    payload = request.get_json(silent=True) or {}
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"error": "Bad Request", "message": "Expected a JSON object."}), 400
 
-    # TODO: delete this and build the route.
+    content_id = payload.get("content_id")
+    reasoning = payload.get("reasoning", "")
+
+    if not isinstance(content_id, str) or not content_id.strip():
+        return jsonify({"error": "Bad Request", "message": "Field 'content_id' must be a non-empty string."}), 400
+
+    # Step 1: verify content_id exists in the audit log
+    existing_entries = audit.entries_for(content_id)
+    if not existing_entries:
+        return jsonify({"error": "Not Found", "message": f"No submission found with content_id '{content_id}'."}), 404
+
+    # Step 2: record the appeal
+    creator_id = existing_entries[0].get("creator_id", "unknown")
+    audit.log_appeal(
+        content_id=content_id,
+        creator_id=creator_id,
+        reasoning=str(reasoning),
+    )
+
+    # Step 3: confirm to the writer
     return jsonify({
-        "error": "not_implemented",
-        "message": "POST /appeal isn't built yet — see the TODO in app.py.",
-        "you_sent": payload,
-    }), 501
+        "ok": True,
+        "content_id": content_id,
+        "status": "under_review",
+        "message": "Appeal recorded. Your submission is now under review.",
+    }), 200
 
 
 # ── Already works ─────────────────────────────────────────────────────────────
