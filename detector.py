@@ -127,7 +127,10 @@ def model_signal(text: str) -> float:
     """
     ppl = perplexity(text)
 
-    midpoint = 45.0    # perplexity that scores 0.5
+    # Unit 8 improvement: was 45. My human samples sat at perplexity 16-43 and
+    # my AI samples at 8-23, so 45 scored nearly all real writing as AI-leaning.
+    # 20 sits halfway (log scale) between the two medians, 15.5 and 25.7.
+    midpoint = 20.0    # perplexity that scores 0.5
     steepness = 1.6    # how sharply the score moves either side of it
 
     # Logistic on log-perplexity. Low perplexity -> high AI score.

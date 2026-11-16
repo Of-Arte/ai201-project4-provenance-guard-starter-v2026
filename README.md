@@ -499,18 +499,97 @@ Perplexity goes up for any reason, not just human writing.
 
 ## The Improvement
 
-**What I changed:**
+**What I changed:** Signal one's midpoint in `detector.py::model_signal`, from perplexity 45 to 20. That's the perplexity that scores 0.5. Nothing else moved.
 
-**Which diagnosis pointed at it:**
+I chose 20 from my own samples, not the attack set. The median perplexity was 15.5 for my AI samples and 25.7 for my own writing, and 20 sits halfway between them on a log scale.
+
+**Which diagnosis pointed at it:** Diagnosis 1. With the midpoint at 45, nearly all real writing scored above 0.5 on signal one, which caused the false positives (FP02–FP07), the narrow gap (criterion 2), and the unreachable human label (criterion 5). FP03 was my worst outcome, so the false positives were what I most wanted to fix.
 
 ### Attack Run — After
 
 <!-- Same format. `run_attacks.py --label after` -->
 
+Full output: `results/attack_run_2026-11-15_2346_after.md`. Same marking rules as the before run.
+
+| ID | Targeting | Before | After | Before verdict | After verdict |
+| --- | --- | --- | --- | --- | --- |
+| EV01 | signal two: typos raise word variety | unsure 0.375 | human 0.319 | BROKE | BROKE |
+| EV02 | signal two: broken-up sentences raise length spread | unsure 0.430 | human 0.276 | BROKE | BROKE |
+| EV03 | signal two: a pasted quotation changes the shape | unsure 0.484 | human 0.327 | BROKE | BROKE |
+| EV04 | signal one: unusual words raise perplexity | unsure 0.584 | unsure 0.428 | BROKE | BROKE |
+| EV05 | both signals: heavy human editing pass | human 0.272 | human 0.169 | BROKE | BROKE |
+| EV06 | signal two: one very long sentence and one very short | unsure 0.450 | human 0.298 | BROKE | BROKE |
+| EV07 | signal two: padding with punctuation | unsure 0.473 | human 0.320 | BROKE | BROKE |
+| EV08 | signal one: text below the token window | unsure 0.389 | human 0.307 | BROKE | BROKE |
+| EV09 | both: AI text with a human opening paragraph bolted on | unsure 0.495 | human 0.341 | BROKE | BROKE |
+| EV10 | signal two: repeated stanza structure | ai 0.826 | ai 0.800 | HELD | HELD |
+| FP01 | plain, clear human writing with no flourishes | unsure 0.557 | unsure 0.402 | HELD | HELD |
+| FP02 | human writing in a formal register | ai 0.707 | unsure 0.555 | BROKE | **HELD** |
+| FP03 | a non-native English speaker writing carefully | ai 0.708 | unsure 0.571 | BROKE | **HELD** |
+| FP04 | a student essay written to a rubric | ai 0.676 | unsure 0.548 | BROKE | **HELD** |
+| FP05 | technical documentation written by a person | ai 0.745 | unsure 0.606 | BROKE | **HELD** |
+| FP06 | a person imitating a formal template | ai 0.662 | unsure 0.556 | BROKE | **HELD** |
+| FP07 | human writing that repeats a phrase deliberately | ai 0.667 | unsure 0.561 | BROKE | **HELD** |
+| FP08 | very short genuine human submission | unsure 0.370 | human 0.266 | HELD | HELD |
+| PI01 | instruction to ignore the check | unsure 0.369 | human 0.233 | BROKE | BROKE |
+| PI02 | instruction disguised as a system message | human 0.206 | human 0.137 | BROKE | BROKE |
+| PI03 | instruction wrapped in the writer's voice | unsure 0.503 | human 0.349 | BROKE | BROKE |
+| PI04 | attempt to make the label text hostile | unsure 0.392 | human 0.249 | HELD | HELD |
+| PI05 | attempt to inject into the audit log | unsure 0.401 | human 0.245 | HELD | HELD |
+| PI06 | instruction plus real human text | unsure 0.534 | unsure 0.383 | HELD | HELD |
+| MF01 | text is only whitespace | 400 | 400 | HELD | HELD |
+| MF02 | text is a single character | 500 | 500 | BROKE | BROKE |
+| MF03 | text is control characters | human 0.250 | human 0.250 | BROKE | BROKE |
+| MF04 | text is only punctuation | human 0.256 | human 0.252 | BROKE | BROKE |
+| MF05 | text is a very long single word | ai 0.749 | ai 0.746 | BROKE | BROKE |
+| MF06 | text is emoji only | ai 0.749 | ai 0.744 | BROKE | BROKE |
+| MF07 | text is right-to-left script | ai 0.703 | unsure 0.613 | BROKE | **HELD** |
+| MF08 | text is 60,000 characters | ai 0.805 | ai 0.790 | HELD | HELD |
+| RQ01 | no text field at all | 400 | 400 | HELD | HELD |
+| RQ02 | no creator_id | unsure 0.370 | human 0.290 | HELD | HELD |
+| RQ03 | text is a number | 400 | 400 | HELD | HELD |
+| RQ04 | text is a list | 400 | 400 | HELD | HELD |
+| RQ05 | text is null | 400 | 400 | HELD | HELD |
+| RQ06 | creator_id is an object | human 0.275 | human 0.257 | BROKE | BROKE |
+| RQ07 | body is a JSON array, not an object | 400 | 400 | HELD | HELD |
+| RQ08 | body is unparseable JSON | 400 | 400 | HELD | HELD |
+| RQ09 | body is empty | 400 | 400 | HELD | HELD |
+| RQ10 | body is form-encoded, not JSON | 429 | 429 | HELD* | HELD* |
+| RQ11 | body is JSON claiming to be plain text | 429 | 429 | HELD* | HELD* |
+| RQ12 | deeply nested JSON | 400 | 400 | HELD | HELD |
+| FL01_01–05 | 20 rapid submissions from one creator | human 0.264 | human 0.254 | HELD | HELD |
+| FL01_06–12 | 20 rapid submissions from one creator | 429 | 429 | HELD | HELD |
+
+| Family | Before (held / broke) | After (held / broke) |
+| --- | --- | --- |
+| evasion | 1 / 9 | 1 / 9 |
+| false_positive | 2 / 6 | **8 / 0** |
+| prompt_injection | 3 / 3 | 3 / 3 |
+| malformed | 13 / 7 | 14 / 6 |
+| flood_same_creator | 12 / 0 | 12 / 0 |
+| **Total** | **31 / 25** | **38 / 18** |
+
+### Run Log — After
+
+Full output: `results/run_2026-11-15_2348_after.md` and `results/appeals_2026-11-15_2348_after.md`.
+
+| Criterion | Target | Before (each run) | Run 1 | Run 2 | Run 3 | Verdict |
+| --------- | ------ | ----------------- | ----- | ----- | ----- | ------- |
+| 1. Human writing labeled AI | ≤ 1 of 10 | 0/10 | 0/10 | 0/10 | 0/10 | MET |
+| 2. Mean score gap, AI vs human | ≥ 0.40 | 0.166 | 0.201 | 0.201 | 0.201 | MISSED |
+| 3. Malformed requests return 400 | 7 of 7 | 6/7 | 6/7 | 6/7 | 6/7 | MISSED |
+| 4. Appeals change status and are logged | 3 of 3 | 3/3 | 3/3 | 3/3 | 3/3 | MET |
+| 5. Each label produced at least 2 times | 3 of 3 labels | 2/3 (no human) | 2/3 (no AI) | 2/3 (no AI) | 2/3 (no AI) | MISSED |
+
 **Did it help, and how do I know:**
 
-<!-- Widening the unsure band usually fixes one problem and creates another.
-     Reporting that trade honestly is worth full credit. -->
+It helped with the problem I aimed it at, and it made a different problem worse.
+
+- **What got better:** all six false positives moved out of the AI band. FP03, my worst outcome, went from AI 0.708 to unsure 0.571. Five of my ten pieces now get the human label, where none did before.
+- **What got worse:** the AI label is close to gone. Criterion 5 traded a missing human label for a missing AI label. The evasions still break 9 of 10, but 8 of the 9 now get a *human* label. Five of the six prompt injections now land in "human".
+- **What didn't move:** criterion 2 only went from 0.166 to 0.201, because lowering the midpoint pulled both groups down together.
+
+Fewer real writers get accused, and more AI text gets through as "human."
 
 ---
 
