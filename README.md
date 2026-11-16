@@ -133,19 +133,29 @@ It cannot read or understand meaning. Changes to the text layout or structure wi
 ```bash
 $ curl -X POST http://127.0.0.1:5000/submit \
   -H "Content-Type: application/json" \
-  -d '{"text": "...", "creator_id": "..."}'
+  -d '{"text": "This is a real test submission.", "creator_id": "student_01"}'
 ```
 
 ```json
-
+{
+  "confidence": 0.0,
+  "content_id": "c_502a06119742",
+  "creator_id": "student_01",
+  "guess": "pending",
+  "label": "Analysis pending",
+  "model_score": 0.0996,
+  "style_score": 0.0
+}
 ```
 
 **An appeal**
 
+<!-- Milestone 5: To be filled in when /appeal is implemented -->
+
 ```bash
 $ curl -X POST http://127.0.0.1:5000/appeal \
   -H "Content-Type: application/json" \
-  -d '{"content_id": "...", "reasoning": "..."}'
+  -d '{"content_id": "c_502a06119742", "reasoning": "This was written entirely by me."}'
 ```
 
 ```json
@@ -159,7 +169,22 @@ $ curl "http://127.0.0.1:5000/log?limit=3"
 ```
 
 ```json
-
+{
+  "count": 1,
+  "entries": [
+    {
+      "combined_score": null,
+      "content_id": "c_502a06119742",
+      "creator_id": "student_01",
+      "guess": null,
+      "label": null,
+      "model_score": 0.0996,
+      "status": "decided",
+      "style_score": null,
+      "timestamp": "2026-11-05T03:31:17+00:00"
+    }
+  ]
+}
 ```
 
 ---

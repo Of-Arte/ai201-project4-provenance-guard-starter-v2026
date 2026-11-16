@@ -202,35 +202,38 @@ def submit():
     a malformed input is one of the most common real failures there is.
     """
 
-    payload = request.get_json(silent=True) or {}
-    text = payload.get(text)
-    creator_id = payload.get(creator_id, "unknown")
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"error": "Bad Request", "message": "Expected a JSON object."}), 400
 
-    # Step 2 validation
+    text = payload.get("text")
+    creator_id = payload.get("creator_id", "unknown")
+
+    # Step 2 validation: text must be non-empty string
     if not isinstance(text, str) or not text.strip():
-        return jsonify({"error": "Bad Request", "message": "Send"}), 400
+        return jsonify({"error": "Bad Request", "message": "Field 'text' must be a non-empty string."}), 400
 
     # Step 3 - model signal
     model_score = detector.model_signal(text)
 
-    # Step 4 Log the decision
+    # Step 4 - Log the decision
     content_id = f"c_{uuid.uuid4().hex[:12]}"
     audit.log_decision(
         content_id=content_id,
         creator_id=creator_id,
         model_score=model_score,
-        status = "decided",
+        status="decided",
     )
 
-    # Route answers
+    # Route answers with real model_score and placeholders for confidence/label/style_score
     return jsonify({
         "content_id": content_id,
         "creator_id": creator_id,
-        "guess": "",
-        "confidence": "confidence",
-        "label": "label",
+        "guess": "pending",
+        "confidence": 0.0,
+        "label": "Analysis pending",
         "model_score": model_score,
-        "style_score": "style_score"
+        "style_score": 0.0,
     }), 200
 
 
