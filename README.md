@@ -377,20 +377,94 @@ What these show:
 
 <!-- Your five criteria across three trials. `run_eval.py --label before`. -->
 
+Full output: `results/run_2026-11-15_2052_before.md` (criteria 1, 2, 3, 5) and `results/appeals_2026-11-15_1944_before.md` (criterion 4).
+
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 | --------- | ------ | ----- | ----- | ----- | ------- |
-| 1.        |        |       |       |       |         |
-| 2.        |        |       |       |       |         |
-| 3.        |        |       |       |       |         |
-| 4.        |        |       |       |       |         |
-| 5.        |        |       |       |       |         |
+| 1. Human writing labeled AI | ≤ 1 of 10 | 0/10 | 0/10 | 0/10 | MET |
+| 2. Mean score gap, AI vs human | ≥ 0.40 | 0.166 | 0.166 | 0.166 | MISSED |
+| 3. Malformed requests return 400 | 7 of 7 | 6/7 | 6/7 | 6/7 | MISSED |
+| 4. Appeals change status and are logged | 3 of 3 | 3/3 | 3/3 | 3/3 | MET |
+| 5. Each label produced at least 2 times | 3 of 3 labels | 2/3 | 2/3 | 2/3 | MISSED |
 
-**Real output from one trial**, pasted as text, naming the file and function
-that produced it:
+All three trials came out identical, which is expected since neither signal is random.
+
+**Real output from one trial** (trial 1), pasted as text. The `label` field is trimmed for length; `confidence` is the combined score.
+
+**Criterion 1**: `run_eval.py::main` → `app.py::submit`
 
 ```json
-
+{"status": 200, "guess": "unsure", "confidence": 0.5177, "model_score": 0.7007, "style_score": 0.3348, "sent": "Sociologically, this is kind of bizarre to me. I don't know many peopl"}
+{"status": 200, "guess": "unsure", "confidence": 0.3581, "model_score": 0.5172, "style_score": 0.1991, "sent": "Josh Silver's new book Fruit Fly has an inciting incident where the ma"}
+{"status": 200, "guess": "unsure", "confidence": 0.5302, "model_score": 0.7186, "style_score": 0.3419, "sent": "I had something interesting happen to me last night, and I'm curious t"}
+{"status": 200, "guess": "unsure", "confidence": 0.3782, "model_score": 0.5338, "style_score": 0.2226, "sent": "In my writing journey I realized that a lot of my stuff uses a lot of "}
+{"status": 200, "guess": "unsure", "confidence": 0.5828, "model_score": 0.8381, "style_score": 0.3275, "sent": "I’ve been writing on and off for almost six years now. I genuinely enj"}
+{"status": 200, "guess": "unsure", "confidence": 0.5616, "model_score": 0.7969, "style_score": 0.3263, "sent": "So some time back I finished the first draft of my novel, and decided "}
+{"status": 200, "guess": "unsure", "confidence": 0.6052, "model_score": 0.7529, "style_score": 0.4575, "sent": "Here's an interesting discussion I've been wondering about for a while"}
+{"status": 200, "guess": "unsure", "confidence": 0.4873, "model_score": 0.7487, "style_score": 0.2258, "sent": "Use the words that are naturally part of your vocabulary. If you have "}
+{"status": 200, "guess": "unsure", "confidence": 0.4012, "model_score": 0.5277, "style_score": 0.2747, "sent": "Right now, I'm loosely plotting what will either be Book 11 or Book 12"}
+{"status": 200, "guess": "unsure", "confidence": 0.4595, "model_score": 0.6823, "style_score": 0.2366, "sent": "I'm a college student in a workshop class with a very accredited autho"}
 ```
+
+**Criterion 2**: `run_eval.py::main` → `app.py::submit`. AI mean 0.6397, human mean 0.4734, gap 0.1663.
+
+```json
+{"status": 200, "guess": "unsure", "confidence": 0.6205, "model_score": 0.7439, "style_score": 0.4971, "sent": "Remote work has fundamentally transformed the modern workplace. By eli"}
+{"status": 200, "guess": "unsure", "confidence": 0.6362, "model_score": 0.9205, "style_score": 0.3519, "sent": "Regular physical activity offers numerous benefits for both physical a"}
+{"status": 200, "guess": "unsure", "confidence": 0.6216, "model_score": 0.9369, "style_score": 0.3062, "sent": "Climate change is one of the most pressing challenges facing humanity "}
+{"status": 200, "guess": "ai", "confidence": 0.655, "model_score": 0.8129, "style_score": 0.4972, "sent": "Reading is a valuable habit that offers a wide range of benefits. It e"}
+{"status": 200, "guess": "ai", "confidence": 0.6653, "model_score": 0.8457, "style_score": 0.485, "sent": "Effective time management is essential for achieving personal and prof"}
+```
+
+The five human samples are my pieces 1–5, shown under criterion 1.
+
+**Criterion 3**: `run_eval.py::main` → `app.py::submit`
+
+```json
+{"status": 400, "guess": null, "confidence": null, "model_score": null, "style_score": null, "label": null, "sent": "(empty text)"}
+{"status": 400, "guess": null, "confidence": null, "model_score": null, "style_score": null, "label": null, "sent": "   \n\t "}
+{"status": 400, "guess": null, "confidence": null, "model_score": null, "style_score": null, "label": null, "sent": "{\"creator_id\": \"eval_bad_missing\"}"}
+{"status": 400, "guess": null, "confidence": null, "model_score": null, "style_score": null, "label": null, "sent": "{\"text\": null, \"creator_id\": \"eval_bad_null\"}"}
+{"status": 400, "guess": null, "confidence": null, "model_score": null, "style_score": null, "label": null, "sent": "{\"text\": 12345, \"creator_id\": \"eval_bad_number\"}"}
+{"status": 400, "guess": null, "confidence": null, "model_score": null, "style_score": null, "label": null, "sent": "{\"text\": [\"a\", \"list\"], \"creator_id\": \"eval_bad_list\"}"}
+{"status": null, "error": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)", "sent": "a"}
+```
+
+The last one is a 500. Flask sent back an HTML error page, so there was no JSON to read.
+
+**Criterion 4**: `run_appeals.py::main` → `app.py::submit`, `app.py::appeal`, `app.py::get_log`
+
+```json
+[
+  {"content_id": "c_979145f7c8f7", "appeal_status": "under_review", "appeal_logged": true, "passed": true},
+  {"content_id": "c_e2bf8762d52e", "appeal_status": "under_review", "appeal_logged": true, "passed": true},
+  {"content_id": "c_e852c4606c2d", "appeal_status": "under_review", "appeal_logged": true, "passed": true}
+]
+```
+
+`run_eval.py` only sends text to `/submit`, so I wrote `run_appeals.py` to submit, appeal, and check the log.
+
+**Criterion 5**: `run_eval.py::main` → `app.py::submit`. 2 AI, 13 unsure, 0 human.
+
+```json
+{"status": 200, "guess": "unsure", "confidence": 0.6205, "model_score": 0.7439, "style_score": 0.4971, "sent": "Remote work has fundamentally transformed the modern workplace. By eli"}
+{"status": 200, "guess": "unsure", "confidence": 0.6362, "model_score": 0.9205, "style_score": 0.3519, "sent": "Regular physical activity offers numerous benefits for both physical a"}
+{"status": 200, "guess": "unsure", "confidence": 0.6216, "model_score": 0.9369, "style_score": 0.3062, "sent": "Climate change is one of the most pressing challenges facing humanity "}
+{"status": 200, "guess": "ai", "confidence": 0.655, "model_score": 0.8129, "style_score": 0.4972, "sent": "Reading is a valuable habit that offers a wide range of benefits. It e"}
+{"status": 200, "guess": "ai", "confidence": 0.6653, "model_score": 0.8457, "style_score": 0.485, "sent": "Effective time management is essential for achieving personal and prof"}
+{"status": 200, "guess": "unsure", "confidence": 0.5153, "model_score": 0.7492, "style_score": 0.2815, "sent": "I started working from home two years ago and honestly it's been mostl"}
+{"status": 200, "guess": "unsure", "confidence": 0.4725, "model_score": 0.7556, "style_score": 0.1894, "sent": "My doctor told me to walk more, so I've been doing thirty minutes afte"}
+{"status": 200, "guess": "unsure", "confidence": 0.4249, "model_score": 0.4749, "style_score": 0.375, "sent": "We had a drought last summer and the town put in watering restrictions"}
+{"status": 200, "guess": "unsure", "confidence": 0.5242, "model_score": 0.6017, "style_score": 0.4466, "sent": "I used to read all the time as a kid and then just stopped somewhere i"}
+{"status": 200, "guess": "unsure", "confidence": 0.4522, "model_score": 0.5013, "style_score": 0.4032, "sent": "I tried the Pomodoro thing for a week. Twenty-five minutes on, five of"}
+{"status": 200, "guess": "unsure", "confidence": 0.5616, "model_score": 0.7969, "style_score": 0.3263, "sent": "So some time back I finished the first draft of my novel, and decided "}
+{"status": 200, "guess": "unsure", "confidence": 0.6052, "model_score": 0.7529, "style_score": 0.4575, "sent": "Here's an interesting discussion I've been wondering about for a while"}
+{"status": 200, "guess": "unsure", "confidence": 0.4873, "model_score": 0.7487, "style_score": 0.2258, "sent": "Use the words that are naturally part of your vocabulary. If you have "}
+{"status": 200, "guess": "unsure", "confidence": 0.4012, "model_score": 0.5277, "style_score": 0.2747, "sent": "Right now, I'm loosely plotting what will either be Book 11 or Book 12"}
+{"status": 200, "guess": "unsure", "confidence": 0.4595, "model_score": 0.6823, "style_score": 0.2366, "sent": "I'm a college student in a workshop class with a very accredited autho"}
+```
+
+Inputs 1–5 are AI, 6–10 borderline, 11–15 my pieces 6–10.
 
 **Diagnoses**
 
