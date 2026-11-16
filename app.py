@@ -155,7 +155,7 @@ def health():
 # ── YOU BUILD THIS ────────────────────────────────────────────────────────────
 
 @app.post("/submit")
-# @limiter.limit(f"{config.RATE_LIMIT_PER_MINUTE}/minute;{config.RATE_LIMIT_PER_DAY}/day")
+@limiter.limit(f"{config.RATE_LIMIT_PER_MINUTE}/minute;{config.RATE_LIMIT_PER_DAY}/day")
 def submit():
     """
     Take a piece of text, decide about it, log the decision, answer.
@@ -206,6 +206,7 @@ def submit():
 
     payload = request.get_json(silent=True)
     if not isinstance(payload, dict):
+        audit.log_rejection(creator_id="unknown", reason="invalid_json")
         return jsonify({"error": "Bad Request", "message": "Expected a JSON object."}), 400
 
     text = payload.get("text")
@@ -213,6 +214,7 @@ def submit():
 
     # Step 2 validation: text must be non-empty string
     if not isinstance(text, str) or not text.strip():
+        audit.log_rejection(creator_id=str(creator_id), reason="empty_text")
         return jsonify({"error": "Bad Request", "message": "Field 'text' must be a non-empty string."}), 400
 
     # Step 3 - compute both signals, combined score, and human-readable label

@@ -227,7 +227,9 @@ $ curl "http://127.0.0.1:5000/log?limit=3"
 
 ## Rate Limiting
 
-**My limits:** **_ per minute, _** per day
+**My limits:** **5** per minute, **100** per day
+
+Configured in `config.py` (`RATE_LIMIT_PER_MINUTE`, `RATE_LIMIT_PER_DAY`) and applied to `/submit` in `app.py`.
 
 **Why those numbers and not others:**
 
@@ -236,16 +238,28 @@ $ curl "http://127.0.0.1:5000/log?limit=3"
      thresholds. Your numbers have to be liveable for the first and hostile to
      the second. -->
 
-**What a caller counts as:** <!-- per address, or per creator_id? They fail
-differently — one script can look like a thousand callers, and one household
-can look like one. -->
+A real writer submits a few times an hour, maybe a quick resubmit after fixing a typo. 5 per minute leaves room for that without ever getting in their way. A script mapping my thresholds needs hundreds of small variations. At 100 per day, a thousand variations takes ten days instead of a few minutes, which makes that kind of probing slow and visible in the log.
+
+**What a caller counts as:** Per `creator_id`, falling back to the caller's address when `creator_id` is missing. This keeps one writer from being blocked by others on the same network. The weakness is that a script can rotate `creator_id` values and look like many different writers.
 
 **The run of status codes when I pushed past it:**
 
 <!-- python run_attacks.py --flood 15 -->
 
 ```
+$ python run_attacks.py --flood 15
+200 200 200 200 200 429 429 429 429 429 429 429 429 429 429
 
+10 of 15 were rate limited.
+```
+
+**What a rejection looks like in the log:**
+
+Rate-limit rejections are logged by the 429 handler. Requests my route refuses (bad JSON or empty text) are logged with `audit.log_rejection`.
+
+```json
+{"creator_id": "flood_tester", "event": "rejected", "limit": "5 per 1 minute", "reason": "rate_limited", "status": "rejected", "timestamp": "2026-11-16T00:17:48+00:00"}
+{"creator_id": "log_check_empty", "event": "rejected", "reason": "empty_text", "status": "rejected", "timestamp": "2026-11-16T00:17:55+00:00"}
 ```
 
 ---
