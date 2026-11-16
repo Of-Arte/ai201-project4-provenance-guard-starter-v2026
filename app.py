@@ -30,6 +30,8 @@ from flask import Flask, jsonify, request
 
 import audit
 import config
+import detector
+
 
 app = Flask(__name__)
 
@@ -199,17 +201,37 @@ def submit():
     what should this do when `text` is missing, empty, or enormous? A crash on
     a malformed input is one of the most common real failures there is.
     """
-    payload = request.get_json(silent=True) or {}
 
-    # TODO: delete this and build the route.
+    payload = request.get_json(silent=True) or {}
+    text = payload.get(text)
+    creator_id = payload.get(creator_id, "unknown")
+
+    # Step 2 validation
+    if not isinstance(text, str) or not text.strip():
+        return jsonify({"error": "Bad Request", "message": "Send"}), 400
+
+    # Step 3 - model signal
+    model_score = detector.model_signal(text)
+
+    # Step 4 Log the decision
+    content_id = f"c_{uuid.uuid4().hex[:12]}"
+    audit.log_decision(
+        content_id=content_id,
+        creator_id=creator_id,
+        model_score=model_score,
+        status = "decided",
+    )
+
+    # Route answers
     return jsonify({
-        "error": "not_implemented",
-        "message": "POST /submit isn't built yet — see the TODO in app.py.",
-        "you_sent": {
-            "text_length": len(payload.get("text", "")),
-            "creator_id": payload.get("creator_id"),
-        },
-    }), 501
+        "content_id": content_id,
+        "creator_id": creator_id,
+        "guess": "",
+        "confidence": "confidence",
+        "label": "label",
+        "model_score": model_score,
+        "style_score": "style_score"
+    }), 200
 
 
 @app.post("/appeal")
