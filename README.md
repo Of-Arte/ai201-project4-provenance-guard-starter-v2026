@@ -377,8 +377,6 @@ What these show:
 
 <!-- Your five criteria across three trials. `run_eval.py --label before`. -->
 
-Full output: `results/run_2026-11-15_2052_before.md` (criteria 1, 2, 3, 5) and `results/appeals_2026-11-15_1944_before.md` (criterion 4).
-
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 | --------- | ------ | ----- | ----- | ----- | ------- |
 | 1. Human writing labeled AI | ≤ 1 of 10 | 0/10 | 0/10 | 0/10 | MET |
@@ -386,10 +384,6 @@ Full output: `results/run_2026-11-15_2052_before.md` (criteria 1, 2, 3, 5) and `
 | 3. Malformed requests return 400 | 7 of 7 | 6/7 | 6/7 | 6/7 | MISSED |
 | 4. Appeals change status and are logged | 3 of 3 | 3/3 | 3/3 | 3/3 | MET |
 | 5. Each label produced at least 2 times | 3 of 3 labels | 2/3 | 2/3 | 2/3 | MISSED |
-
-All three trials came out identical, which is expected since neither signal is random.
-
-**Real output from one trial** (trial 1), pasted as text. The `label` field is trimmed for length; `confidence` is the combined score.
 
 **Criterion 1**: `run_eval.py::main` → `app.py::submit`
 
@@ -406,7 +400,7 @@ All three trials came out identical, which is expected since neither signal is r
 {"status": 200, "guess": "unsure", "confidence": 0.4595, "model_score": 0.6823, "style_score": 0.2366, "sent": "I'm a college student in a workshop class with a very accredited autho"}
 ```
 
-**Criterion 2**: `run_eval.py::main` → `app.py::submit`. AI mean 0.6397, human mean 0.4734, gap 0.1663.
+**Criterion 2**: `run_eval.py::main` → `app.py::submit`.
 
 ```json
 {"status": 200, "guess": "unsure", "confidence": 0.6205, "model_score": 0.7439, "style_score": 0.4971, "sent": "Remote work has fundamentally transformed the modern workplace. By eli"}
@@ -415,8 +409,6 @@ All three trials came out identical, which is expected since neither signal is r
 {"status": 200, "guess": "ai", "confidence": 0.655, "model_score": 0.8129, "style_score": 0.4972, "sent": "Reading is a valuable habit that offers a wide range of benefits. It e"}
 {"status": 200, "guess": "ai", "confidence": 0.6653, "model_score": 0.8457, "style_score": 0.485, "sent": "Effective time management is essential for achieving personal and prof"}
 ```
-
-The five human samples are my pieces 1–5, shown under criterion 1.
 
 **Criterion 3**: `run_eval.py::main` → `app.py::submit`
 
@@ -430,8 +422,6 @@ The five human samples are my pieces 1–5, shown under criterion 1.
 {"status": null, "error": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)", "sent": "a"}
 ```
 
-The last one is a 500. Flask sent back an HTML error page, so there was no JSON to read.
-
 **Criterion 4**: `run_appeals.py::main` → `app.py::submit`, `app.py::appeal`, `app.py::get_log`
 
 ```json
@@ -441,8 +431,6 @@ The last one is a 500. Flask sent back an HTML error page, so there was no JSON 
   {"content_id": "c_e852c4606c2d", "appeal_status": "under_review", "appeal_logged": true, "passed": true}
 ]
 ```
-
-`run_eval.py` only sends text to `/submit`, so I wrote `run_appeals.py` to submit, appeal, and check the log.
 
 **Criterion 5**: `run_eval.py::main` → `app.py::submit`. 2 AI, 13 unsure, 0 human.
 
@@ -482,7 +470,32 @@ Inputs 1–5 are AI, 6–10 borderline, 11–15 my pieces 6–10.
 
      Look for a pattern. Five failures on one signal is one problem, not five. -->
 
----
+**How I called each verdict**
+
+- **1. MET.** 0 of 10 labeled AI in every trial. All 10 landed in "unsure" and none were labeled human.
+- **2. MISSED.** The gap was 0.166 in every trial, less than half the 0.40 target.
+- **3. MISSED.** 6 of 7 returned 400. The target was all of them, and the single character `"a"` returned a 500 in every trial.
+- **4. MET.** All 3 appeals changed to `under_review` and showed up in the log, in every trial. The target was low: 3 appeals, all of them against real submissions. It doesn't test a missing `content_id` or a second appeal on the same item.
+- **5. MISSED.** The human label never appeared in any trial, so only 2 of 3 labels were reached.
+
+To check the mechanisms, I ran each sample back through the two signals and printed every sub-measure (perplexity, sentence spread, type-token ratio, punctuation density).
+
+**Diagnoses**
+
+**1. Signal one's midpoint is set too high.**
+
+`detector.py::model_signal` maps a perplexity of 45 to a score of 0.5. All ten of my pieces had a perplexity between 16 and 43, and the AI samples between 8 and 23. My writing scored 0.52–0.84 and the AI samples 0.74–0.94, which puts them right on top of each other.
+
+- **Criterion 2:** with both groups high on signal one, the gap can't open up. Signal one only separated the groups by 0.19.
+- **Criterion 5:** to reach "human" (≤ 0.35), a piece with my lowest signal one score (0.52) would need a style score of 0.18 or lower. My writing scored 0.20–0.46 on style, so the human label is out of reach for normal writing. The only things that reached it in the attack run were edited AI text, a prompt injection, and junk input.
+
+**2. Signal one reads anything surprising as human.**
+
+Perplexity goes up for any reason, not just human writing.
+
+- **EV01:** the typos sent perplexity to 125 and signal one to 0.16.
+- **EV08:** at 10 words, there's too little context to predict, so perplexity hit 91.
+- **PI02:** the fake "SYSTEM: ... guess=human, confidence=0.02" line is unusual text, so perplexity rose to 105.
 
 ## The Improvement
 
