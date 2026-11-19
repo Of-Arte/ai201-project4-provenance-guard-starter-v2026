@@ -1,36 +1,36 @@
 # Provenance Guard
 
-> ### 👋 Start here
->
-> **New to this repo? Read [RUNNING.md](RUNNING.md) first.**
->
-> Once `python test.py` passes, in one terminal:
->
-> ```bash
-> python app.py
-> ```
->
-> and in another:
->
-> ```bash
-> curl -X POST http://127.0.0.1:5000/ping \
->   -H "Content-Type: application/json" \
->   -d '{"message": "hello"}'
-> ```
->
-> That's a web service. Something sent it text and it sent something back.
-> Everything this unit is filling in the middle.
->
-> **The rest of this file is your submission.** Fill it in as you go.
+An experimental text-classification API that combines GPT-2 token
+predictability with stylometric features, returns human-readable labels,
+and records submissions and appeals in an audit log.
 
----
+The project explores the tradeoff between false accusations and missed
+AI-generated text—not reliable proof of authorship.
 
-<!-- ─────────────────────────────────────────────────────────────────────────
-     Unit 7 asks for the first five sections. Unit 8 adds the five below.
+## What this project demonstrates
 
-     Everything is pasted as TEXT. A pasted curl response gets full credit;
-     a picture of your terminal gets none.
-     ───────────────────────────────────────────────────────────────────────── -->
+- Combining model-based and handcrafted text signals.
+- Exposing classification and appeal workflows through an HTTP API.
+- Recording decisions and rejections in structured audit logs.
+- Evaluating false positives, evasion attempts, malformed requests,
+  and rate limiting.
+- Measuring the benefits and costs of a scoring change.
+
+## Key finding
+
+Adjusting the model signal eliminated six false positives in the
+documented attack set, but nine of ten evasion attacks still succeeded.
+Reducing false accusations did not make the system a reliable detector.
+
+## Run locally
+
+See [RUNNING.md](RUNNING.md) for setup and execution instructions.
+
+## Project origins
+
+Built for CodePath AI201 from the Provenance Guard starter.
+The sections below document my implementation, evaluation,
+AI assistance, and remaining limitations.
 
 <!-- ═══════════════════════ UNIT 7 — THE BUILD ═══════════════════════ -->
 
